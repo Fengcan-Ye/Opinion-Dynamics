@@ -42,6 +42,8 @@ parser.add_argument('--T', type=float)
 
 args = parser.parse_args()
 
+np.random.seed(args.seed)
+
 
 if args.network_type == 'scale-free':
     network = nx.barabasi_albert_graph(args.n, args.m, args.seed)
