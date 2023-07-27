@@ -2,6 +2,7 @@ import numpy as np
 import networkx as nx
 from network_gen import *
 from opinion_dynamics import *
+from censor import *
 import matplotlib.pyplot as plt
 import tqdm
 import argparse 
@@ -22,7 +23,7 @@ parser.add_argument('--k', type=int, default=4, help='clique size')
 parser.add_argument('--save-folder', type=str, default='./result', help='folder for saving plots')
 parser.add_argument('--n-steps', type=int, default=1000, help='total timesteps') 
 
-parser.add_argument('--K', type=float, default=3, help='strenth of interaction')
+parser.add_argument('--K', type=float, default=3, help='strength of interaction')
 parser.add_argument('--alpha', type=float, default=3, help='control the steepness of tanh')
 parser.add_argument('--dt', type=float, default=0.01, help='timestep')
 
@@ -31,6 +32,13 @@ parser.add_argument('--tau2', type=float, default=1.5)
 parser.add_argument('--mu', type=float, default=4)
 parser.add_argument('--average-degree', type=float, default=4)
 parser.add_argument('--min-community', type=int, default=20)
+
+# Censorship related
+parser.add_argument('--bias', type=float)
+parser.add_argument('--favored', type=int)
+parser.add_argument('--discount-factor', type=float)
+parser.add_argument('--strength', type=float)
+parser.add_argument('--T', type=float)
 
 args = parser.parse_args()
 
@@ -53,12 +61,17 @@ else:
 
 os.makedirs(args.save_folder, exist_ok=True)
 
-initialize_opinions(network)
+society = Society(network, args.K, args.alpha, args.beta, args.dt)
+
+if args.enable_censorship:
+    censor = Censor(args.bias, args.favored, args.discount_factor, args.T, args.strength)
+    society.couple(censor)
 
 for i in tqdm.trange(args.n_steps):
-    update_opinions(network, args.K, args.alpha, args.beta, None, args.dt)
+    society.update()
 
 plt.figure()
+I, _ = society.trajectories()
 for i in range(network.number_of_nodes()):
-    plt.plot(network.nodes[i]['intrinsic opinion'])
+    plt.plot(I[i, :])
 plt.savefig(os.path.join(args.save_folder, '%s_K=%.2f_alpha=%.2f_beta=%.2f.png' % (args.network_type, args.K, args.alpha, args.beta)))
