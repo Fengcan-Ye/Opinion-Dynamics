@@ -39,6 +39,7 @@ parser.add_argument('--favored', type=int)
 parser.add_argument('--discount-factor', type=float)
 parser.add_argument('--strength', type=float)
 parser.add_argument('--T', type=float)
+parser.add_argument('--Nc', type=float) # 单位时间内平均审查次数
 
 args = parser.parse_args()
 
@@ -66,7 +67,7 @@ os.makedirs(args.save_folder, exist_ok=True)
 society = Society(network, args.K, args.alpha, args.beta, args.dt)
 
 if args.enable_censorship:
-    censor = Censor(args.bias, args.favored, args.discount_factor, args.T, args.strength)
+    censor = Censor(args.bias, args.favored, args.discount_factor, args.T, args.strength, args.Nc)
     society.couple(censor)
 
 for i in tqdm.trange(args.n_steps):
